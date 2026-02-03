@@ -1,0 +1,7 @@
+{
+  "name": "EverJobs Nigeria",
+  "description": "A modern, AI-powered job board focusing on high-quality opportunities in Lagos, Ogun, and Abuja. Search and discover your next career move with ease.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
