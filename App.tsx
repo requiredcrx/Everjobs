@@ -135,7 +135,7 @@ const App: React.FC = () => {
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse border border-indigo-100">
               <Sparkles size={12} />
-              Now Powered by Gemini AI
+              AI-powered Job Board
             </div>
             
             <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
