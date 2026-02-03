@@ -1,13 +1,32 @@
 
 import React from 'react';
 import { Job } from '../types';
-import { Briefcase, MapPin, Clock, ExternalLink, Sparkles, Building2 } from 'lucide-react';
+import { Briefcase, MapPin, Clock, ExternalLink, Building2 } from 'lucide-react';
 
 interface JobCardProps {
   job: Job;
   onClick: (job: Job) => void;
   onCompanyClick?: (companyName: string) => void;
 }
+
+const formatRelativeTime = (timestamp: number): string => {
+  const now = Date.now();
+  const diffInSeconds = Math.floor((now - timestamp) / 1000);
+  
+  if (diffInSeconds < 60) return 'Just now';
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays === 1) return 'Yesterday';
+  if (diffInDays < 7) return `${diffInDays} days ago`;
+  
+  return new Date(timestamp).toLocaleDateString();
+};
 
 const JobCard: React.FC<JobCardProps> = ({ job, onClick, onCompanyClick }) => {
   const handleCompanyClick = (e: React.MouseEvent) => {
@@ -58,7 +77,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick, onCompanyClick }) => {
         </div>
         <div className="flex items-center gap-1.5 text-slate-400 text-xs font-bold uppercase tracking-wider">
           <Clock size={14} className="text-indigo-400" />
-          <span>{job.postedAt}</span>
+          <span>{formatRelativeTime(job.postedAt)}</span>
         </div>
         {job.salary && (
           <div className="flex items-center gap-1.5 text-indigo-600 text-xs font-black uppercase tracking-wider bg-indigo-50 px-2 py-0.5 rounded">

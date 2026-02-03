@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { X, CheckCircle2, Loader2, Briefcase, MapPin, DollarSign, Link, Upload, ImageIcon } from 'lucide-react';
+import { X, CheckCircle2, Loader2, Briefcase, MapPin, DollarSign, Link, ImageIcon, Plus } from 'lucide-react';
 import { Job, AppLocation } from '../types';
 import { LOCATIONS, CATEGORIES } from '../constants';
 
@@ -14,6 +14,7 @@ const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose, onAddJob }
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
@@ -44,13 +45,12 @@ const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose, onAddJob }
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
     setTimeout(() => {
       const newJob: Job = {
         id: Math.random().toString(36).substr(2, 9),
         ...formData,
         logo: logoPreview || undefined,
-        postedAt: 'Just now',
+        postedAt: Date.now(), // Real timestamp
         location: formData.location as any,
       };
       onAddJob(newJob);
@@ -59,6 +59,7 @@ const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose, onAddJob }
       setTimeout(() => {
         setSuccess(false);
         setLogoPreview(null);
+        setIsCustomCategory(false);
         onClose();
       }, 1500);
     }, 1000);
@@ -105,59 +106,50 @@ const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose, onAddJob }
                   </>
                 )}
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleLogoUpload} 
-                className="hidden" 
-                accept="image/*" 
-              />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Click to upload company logo</p>
+              <input type="file" ref={fileInputRef} onChange={handleLogoUpload} className="hidden" accept="image/*" />
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Upload Company Logo</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job Title</label>
-                <input 
-                  required
-                  type="text" 
-                  className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium" 
-                  placeholder="e.g. Senior Product Manager"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                />
+                <input required type="text" className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium" placeholder="e.g. Mechanical Engineer" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company Name</label>
-                <input 
-                  required
-                  type="text" 
-                  className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium" 
-                  placeholder="e.g. Acme Inc"
-                  value={formData.company}
-                  onChange={(e) => setFormData({...formData, company: e.target.value})}
-                />
+                <input required type="text" className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium" placeholder="e.g. Dangote Group" value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})} />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job Category</label>
+              {isCustomCategory ? (
+                <div className="flex gap-2">
+                   <input required type="text" className="flex-1 bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium" placeholder="Enter custom category" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} />
+                   <button type="button" onClick={() => setIsCustomCategory(false)} className="px-4 bg-slate-100 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 transition-colors">Select from list</button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <select className="flex-1 bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}>
+                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                  <button type="button" onClick={() => { setIsCustomCategory(true); setFormData({...formData, category: ''}); }} className="px-4 bg-indigo-50 rounded-xl text-xs font-bold text-indigo-600 hover:bg-indigo-100 transition-colors flex items-center gap-1">
+                    <Plus size={14} /> New
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Location</label>
-                <select 
-                  className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium"
-                  value={formData.location}
-                  onChange={(e) => setFormData({...formData, location: e.target.value})}
-                >
+                <select className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})}>
                   {LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                 </select>
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job Type</label>
-                <select 
-                  className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium"
-                  value={formData.type}
-                  onChange={(e) => setFormData({...formData, type: e.target.value})}
-                >
+                <select className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium" value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}>
                   <option>Full-time</option>
                   <option>Part-time</option>
                   <option>Contract</option>
@@ -167,51 +159,27 @@ const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose, onAddJob }
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Salary Range (Optional)</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Salary Range</label>
               <div className="relative">
                 <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input 
-                  type="text" 
-                  className="w-full bg-slate-50 border-slate-100 rounded-xl pl-10 focus:ring-indigo-500 focus:border-indigo-500 font-medium" 
-                  placeholder="e.g. ₦400k - ₦600k"
-                  value={formData.salary}
-                  onChange={(e) => setFormData({...formData, salary: e.target.value})}
-                />
+                <input type="text" className="w-full bg-slate-50 border-slate-100 rounded-xl pl-10 focus:ring-indigo-500 focus:border-indigo-500 font-medium" placeholder="e.g. ₦400k - ₦600k" value={formData.salary} onChange={(e) => setFormData({...formData, salary: e.target.value})} />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Application Link/Email</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Application URL</label>
               <div className="relative">
                 <Link size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input 
-                  required
-                  type="url" 
-                  className="w-full bg-slate-50 border-slate-100 rounded-xl pl-10 focus:ring-indigo-500 focus:border-indigo-500 font-medium" 
-                  placeholder="https://company.com/apply"
-                  value={formData.sourceUrl}
-                  onChange={(e) => setFormData({...formData, sourceUrl: e.target.value})}
-                />
+                <input required type="url" className="w-full bg-slate-50 border-slate-100 rounded-xl pl-10 focus:ring-indigo-500 focus:border-indigo-500 font-medium" placeholder="https://company.com/apply" value={formData.sourceUrl} onChange={(e) => setFormData({...formData, sourceUrl: e.target.value})} />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job Description</label>
-              <textarea 
-                required
-                rows={4}
-                className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium text-sm" 
-                placeholder="Describe the role, responsibilities, and requirements..."
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-              ></textarea>
+              <textarea required rows={4} className="w-full bg-slate-50 border-slate-100 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 font-medium text-sm" placeholder="Describe the role..." value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
             </div>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-100"
-            >
+            <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-100">
               {loading ? <Loader2 className="animate-spin" size={20} /> : 'Publish Listing'}
             </button>
           </form>

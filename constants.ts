@@ -17,7 +17,9 @@ export const CATEGORIES = [
   'Sales',
   'Customer Support',
   'Data Science',
-  'Product Management'
+  'Product Management',
+  'Engineering',
+  'Others'
 ];
 
 export const MOCK_COMPANIES: Record<string, Company> = {
@@ -28,7 +30,7 @@ export const MOCK_COMPANIES: Record<string, Company> = {
     industry: 'Fintech',
     location: 'Lagos, Nigeria',
     employeeCount: '200 - 500',
-    logo: 'https://picsum.photos/id/1/100/100'
+    logo: 'https://media2.dev.to/dynamic/image/width=1000,height=420,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fw3mmrth74w7btle1i97n.png$0'
   },
   'Flutterwave': {
     name: 'Flutterwave',
@@ -37,7 +39,7 @@ export const MOCK_COMPANIES: Record<string, Company> = {
     industry: 'Fintech',
     location: 'Lagos, Nigeria',
     employeeCount: '500 - 1000',
-    logo: 'https://picsum.photos/id/2/100/100'
+    logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJts_Mgrf5Wn1h8ez_aV-JEEYPU-PVZPDk6w&s$0'
   },
   'Zenith Bank': {
     name: 'Zenith Bank',
@@ -59,11 +61,12 @@ export const MOCK_JOBS: Job[] = [
     location: 'Lagos',
     salary: '₦800k - ₦1.2M',
     type: 'Full-time',
-    postedAt: '2 days ago',
+    // Fix: Changed postedAt from string '2 days ago' to numeric timestamp
+    postedAt: Date.now() - (2 * 24 * 60 * 60 * 1000),
     description: 'We are looking for a senior frontend engineer to join our core product team in Lagos. You will be responsible for building high-quality, performant React applications. Requirements: 5+ years experience, expert React/TS knowledge, and a passion for UX.',
     sourceUrl: 'https://paystack.com/careers',
     category: 'Software Engineering',
-    logo: 'https://picsum.photos/id/1/100/100'
+    logo: 'https://media2.dev.to/dynamic/image/width=1000,height=420,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fw3mmrth74w7btle1i97n.png$0'
   },
   {
     id: '2',
@@ -73,11 +76,12 @@ export const MOCK_JOBS: Job[] = [
     location: 'Lagos',
     salary: 'Negotiable',
     type: 'Full-time',
-    postedAt: '1 day ago',
+    // Fix: Changed postedAt from string '1 day ago' to numeric timestamp
+    postedAt: Date.now() - (1 * 24 * 60 * 60 * 1000),
     description: 'Help us build the future of payments in Africa. You will be responsible for creating seamless user experiences across our mobile and web applications. We value simplicity and attention to detail.',
     sourceUrl: 'https://flutterwave.com/careers',
     category: 'Design',
-    logo: 'https://picsum.photos/id/2/100/100'
+    logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJts_Mgrf5Wn1h8ez_aV-JEEYPU-PVZPDk6w&s$0'
   },
   {
     id: '3',
@@ -87,10 +91,11 @@ export const MOCK_JOBS: Job[] = [
     location: 'Abuja',
     salary: '₦500k - ₦700k',
     type: 'Full-time',
-    postedAt: '4 hours ago',
+    // Fix: Changed postedAt from string '4 hours ago' to numeric timestamp
+    postedAt: Date.now() - (4 * 60 * 60 * 1000),
     description: 'Join our Abuja branch as a Financial Analyst. Requirements include a BSc in Accounting or Finance, 2 years experience in banking, and expert Excel skills.',
     sourceUrl: 'https://zenithbank.com',
     category: 'Finance',
-    logo: 'https://picsum.photos/id/3/100/100'
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/0/04/Zenith-Bank-logo.png?20180316193239$0'
   }
 ];

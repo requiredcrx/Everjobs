@@ -17,7 +17,7 @@ export interface Job {
   location: 'Lagos' | 'Ogun' | 'Abuja' | 'Remote';
   salary?: string;
   type: 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
-  postedAt: string;
+  postedAt: number; // Changed to number for Unix timestamp
   description: string;
   sourceUrl: string;
   logo?: string;
