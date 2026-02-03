@@ -12,6 +12,7 @@ import { searchJobsWithGemini } from './services/geminiService';
 const App: React.FC = () => {
   const [activeView, setActiveView] = useState<'jobs' | 'companies'>('jobs');
   const [jobs, setJobs] = useState<Job[]>(MOCK_JOBS);
+  const [companies, setCompanies] = useState<Record<string, Company>>(MOCK_COMPANIES);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
@@ -43,7 +44,7 @@ const App: React.FC = () => {
   };
 
   const handleCompanySelect = (companyName: string) => {
-    const company = MOCK_COMPANIES[companyName] || {
+    const company = companies[companyName] || {
       name: companyName,
       description: "Company details are currently unavailable, but they are hiring through our platform!",
       website: "#",
@@ -55,10 +56,27 @@ const App: React.FC = () => {
   };
 
   const handleAddJob = (newJob: Job) => {
-    setJobs([newJob, ...jobs]);
+    setJobs(prev => [newJob, ...prev]);
+    
+    // Auto-create company if it doesn't exist
+    if (!companies[newJob.company]) {
+      const newCompany: Company = {
+        name: newJob.company,
+        description: `A fast-growing organization hiring talent for ${newJob.title}. Join a team dedicated to excellence and innovation in Nigeria.`,
+        website: "https://everjobs.ng",
+        industry: newJob.category || "Professional Services",
+        location: newJob.location,
+        employeeCount: "1 - 50",
+        logo: newJob.logo
+      };
+      setCompanies(prev => ({
+        ...prev,
+        [newJob.company]: newCompany
+      }));
+    }
   };
 
-  const companiesList = Object.values(MOCK_COMPANIES);
+  const companiesList = Object.values(companies);
 
   return (
     <div className="min-h-screen pb-20 bg-[#f8fafc]">
@@ -77,13 +95,13 @@ const App: React.FC = () => {
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-500">
             <button 
               onClick={() => setActiveView('jobs')}
-              className={`transition-colors ${activeView === 'jobs' ? 'text-indigo-600 font-bold' : 'hover:text-slate-900'}`}
+              className={`transition-colors py-2 border-b-2 ${activeView === 'jobs' ? 'text-indigo-600 border-indigo-600 font-bold' : 'border-transparent hover:text-slate-900'}`}
             >
               Find Jobs
             </button>
             <button 
               onClick={() => setActiveView('companies')}
-              className={`transition-colors ${activeView === 'companies' ? 'text-indigo-600 font-bold' : 'hover:text-slate-900'}`}
+              className={`transition-colors py-2 border-b-2 ${activeView === 'companies' ? 'text-indigo-600 border-indigo-600 font-bold' : 'border-transparent hover:text-slate-900'}`}
             >
               Companies
             </button>
@@ -97,7 +115,7 @@ const App: React.FC = () => {
             <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
             <button 
               onClick={() => setIsPostJobOpen(true)}
-              className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl font-semibold text-sm hover:bg-slate-800 transition-all"
+              className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl font-semibold text-sm hover:bg-slate-800 transition-all shadow-lg"
             >
               <User size={18} />
               <span className="hidden sm:inline">Post a Job</span>
@@ -181,7 +199,7 @@ const App: React.FC = () => {
                   Top Recruiting
                 </h3>
                 <div className="space-y-4">
-                  {companiesList.slice(0, 3).map((comp) => (
+                  {companiesList.slice(0, 4).map((comp) => (
                     <div 
                       key={comp.name} 
                       onClick={() => setSelectedCompany(comp)}
@@ -192,7 +210,9 @@ const App: React.FC = () => {
                       </div>
                       <div className="flex-1 overflow-hidden">
                         <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 truncate transition-colors">{comp.name}</p>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{jobs.filter(j => j.company === comp.name).length} Openings</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          {jobs.filter(j => j.company === comp.name).length} Openings
+                        </p>
                       </div>
                       <ChevronRight size={14} className="text-slate-300 group-hover:text-indigo-400" />
                     </div>
@@ -301,7 +321,10 @@ const App: React.FC = () => {
                   <h3 className="text-2xl font-black text-slate-900 mb-2">No matching jobs</h3>
                   <p className="text-slate-500 max-w-xs mx-auto mb-8 font-medium italic">We couldn't find anything in {filters.location} for "{filters.query}". Try a broader search.</p>
                   <button 
-                    onClick={() => setJobs(MOCK_JOBS)}
+                    onClick={() => {
+                      setJobs(MOCK_JOBS);
+                      setFilters(f => ({ ...f, query: '', location: AppLocation.LAGOS }));
+                    }}
                     className="bg-slate-900 text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-xl hover:bg-slate-800 transition-all shadow-xl"
                   >
                     Clear all filters
@@ -313,8 +336,8 @@ const App: React.FC = () => {
         ) : (
           <div className="space-y-12 animate-in fade-in duration-500">
              <div className="text-center space-y-4 mb-16">
-                <h1 className="text-4xl md:text-5xl font-black text-slate-900">Featured Companies</h1>
-                <p className="text-slate-500 text-lg font-medium max-w-2xl mx-auto">Explore top-tier organizations in Nigeria and discover your next great workplace.</p>
+                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Featured Companies</h1>
+                <p className="text-slate-500 text-lg font-medium max-w-2xl mx-auto italic">Explore the top organizations in Lagos, Abuja, and Ogun that are actively hiring talent.</p>
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -330,7 +353,7 @@ const App: React.FC = () => {
                         <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 p-3 flex items-center justify-center overflow-hidden">
                           {company.logo ? <img src={company.logo} className="w-full h-full object-cover" /> : <Building2 className="text-slate-300" />}
                         </div>
-                        <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                        <span className="bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-100">
                           {company.industry}
                         </span>
                       </div>
@@ -345,7 +368,7 @@ const App: React.FC = () => {
                           <MapPin size={14} className="text-indigo-400" />
                           {company.location}
                         </div>
-                        <div className="flex items-center gap-2 text-indigo-600 text-xs font-black uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-indigo-600 text-xs font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform">
                           {companyJobsCount} JOBS
                           <ChevronRight size={14} />
                         </div>
