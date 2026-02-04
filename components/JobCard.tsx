@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Job } from '../types';
-import { Briefcase, MapPin, Clock, ExternalLink, Building2 } from 'lucide-react';
+import { Briefcase, MapPin, Clock, ExternalLink, Building2, ShieldCheck, ShieldAlert, Shield } from 'lucide-react';
 
 interface JobCardProps {
   job: Job;
@@ -37,13 +37,38 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick, onCompanyClick, index =
     }
   };
 
+  const getVerificationBadge = () => {
+    if (job.verificationStatus === 'Verified') {
+      return (
+        <div className="flex items-center gap-1.5 text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-100">
+          <ShieldCheck size={14} />
+          Verified
+        </div>
+      );
+    }
+    if (job.verificationStatus === 'High Risk') {
+      return (
+        <div className="flex items-center gap-1.5 text-[10px] font-black text-red-600 uppercase tracking-widest bg-red-50 px-2.5 py-1.5 rounded-lg border border-red-100 animate-pulse">
+          <ShieldAlert size={14} />
+          Alert
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+        <Shield size={14} />
+        Auditing
+      </div>
+    );
+  };
+
   return (
     <div 
       onClick={() => onClick(job)}
-      style={{ animationDelay: `${index * 100}ms` }}
-      className="animate-job-entry group bg-white rounded-[32px] p-8 shadow-sm hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-500 border border-slate-100 cursor-pointer hover:-translate-y-2 relative overflow-hidden"
+      style={{ animationDelay: `${index * 80}ms` }}
+      className="animate-job-entry group bg-white rounded-[32px] p-8 shadow-sm hover:shadow-2xl hover:shadow-indigo-100/40 transition-all duration-500 border border-slate-100 cursor-pointer hover:-translate-y-2 relative overflow-hidden"
     >
-      <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600 opacity-0 group-hover:opacity-100 transition-all duration-500" />
+      <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600 opacity-0 group-hover:opacity-100 transition-all duration-300" />
       
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-5">
@@ -55,20 +80,25 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick, onCompanyClick, index =
             )}
           </div>
           <div>
-            <h3 className="font-black text-slate-900 group-hover:text-indigo-600 transition-colors text-lg leading-tight line-clamp-1">
-              {job.title}
-            </h3>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-black text-slate-900 group-hover:text-indigo-600 transition-colors text-lg leading-tight line-clamp-1">
+                {job.title}
+              </h3>
+            </div>
             <button 
               onClick={handleCompanyClick}
-              className="text-slate-500 text-sm font-bold flex items-center gap-1.5 hover:text-indigo-600 transition-colors mt-1"
+              className="text-slate-500 text-sm font-bold flex items-center gap-1.5 hover:text-indigo-600 transition-colors"
             >
               <Building2 size={14} className="text-indigo-400" />
               {job.company}
             </button>
           </div>
         </div>
-        <div className="bg-emerald-50 text-emerald-700 text-[10px] uppercase tracking-[0.2em] font-black px-3 py-1.5 rounded-xl border border-emerald-100">
-          {job.type}
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="bg-emerald-50 text-emerald-700 text-[10px] uppercase tracking-[0.2em] font-black px-3 py-1.5 rounded-xl border border-emerald-100">
+            {job.type}
+          </div>
+          {getVerificationBadge()}
         </div>
       </div>
 
@@ -92,8 +122,8 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick, onCompanyClick, index =
         <span className="text-[10px] text-slate-300 uppercase tracking-[0.2em] font-black">
           {job.category}
         </span>
-        <div className="flex items-center gap-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">
-          View Intel
+        <div className="flex items-center gap-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+          Trust & Details
           <ExternalLink size={14} />
         </div>
       </div>

@@ -9,6 +9,16 @@ export interface Company {
   employeeCount: string;
 }
 
+export type VerificationStatus = 'Verified' | 'Unverified' | 'High Risk';
+
+export interface SafetyReport {
+  status: VerificationStatus;
+  score: number; // 0-100
+  redFlags: string[];
+  greenFlags: string[];
+  summary: string;
+}
+
 export interface Job {
   id: string;
   title: string;
@@ -17,11 +27,13 @@ export interface Job {
   location: 'Lagos' | 'Ogun' | 'Abuja' | 'Remote';
   salary?: string;
   type: 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
-  postedAt: number; // Changed to number for Unix timestamp
+  postedAt: number;
   description: string;
   sourceUrl: string;
   logo?: string;
   category: string;
+  verificationStatus?: VerificationStatus;
+  safetyReport?: SafetyReport;
 }
 
 export interface SearchFilters {

@@ -1,11 +1,11 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Job } from "../types";
+import { Job, SafetyReport } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
- * Utility for exponential backoff retries
+ * Utility for exponential backoff retries to handle transient errors
  */
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
   try {
@@ -26,8 +26,52 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Pr
 }
 
 /**
- * Parses natural language career queries into structured data
+ * Performs an AI-driven safety audit to detect scams (fake interviews, GNLD patterns)
  */
+export const getJobSafetyAudit = async (job: Partial<Job>): Promise<SafetyReport> => {
+  return withRetry(async () => {
+    const prompt = `
+      Act as a Security Audit Specialist for the Nigerian Job Market. 
+      Analyze this job listing for potential scam signatures (e.g., GNLD recruitment, fake interview centers).
+      
+      Job Details:
+      Title: ${job.title}
+      Company: ${job.company}
+      Location: ${job.location}
+      Description: ${job.description}
+      
+      Evaluate based on:
+      1. Address format (vague Ikeja, Anthony, or Yaba addresses are often red flags).
+      2. Professionalism of language.
+      3. Requests for payment/form fees.
+      4. Generic contact emails (gmail vs professional domain).
+      
+      Output JSON only.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            status: { type: Type.STRING, description: "'Verified', 'Unverified', or 'High Risk'" },
+            score: { type: Type.INTEGER, description: "Trust score 0-100" },
+            redFlags: { type: Type.ARRAY, items: { type: Type.STRING } },
+            greenFlags: { type: Type.ARRAY, items: { type: Type.STRING } },
+            summary: { type: Type.STRING }
+          },
+          required: ["status", "score", "redFlags", "greenFlags", "summary"]
+        }
+      }
+    });
+
+    return JSON.parse(response.text || '{}');
+  });
+};
+
 export const parseCareerQuery = async (userInput: string): Promise<{ query: string, location: string }> => {
   return withRetry(async () => {
     try {
@@ -55,14 +99,11 @@ export const parseCareerQuery = async (userInput: string): Promise<{ query: stri
   });
 };
 
-/**
- * Search jobs using Gemini
- */
 export const searchJobsWithGemini = async (query: string, location: string): Promise<Job[]> => {
   return withRetry(async () => {
     try {
-      const prompt = `Search for current job openings in ${location}, Nigeria for the role: "${query}". 
-      Provide realistic job listings based on current trends.`;
+      const prompt = `Find 3-5 realistic job openings in ${location}, Nigeria for "${query}". 
+      Return JSON objects representing the jobs. Include specific Nigerian company names if possible.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -84,7 +125,7 @@ export const searchJobsWithGemini = async (query: string, location: string): Pro
                 category: { type: Type.STRING },
                 salary: { type: Type.STRING }
               },
-              required: ["title", "company", "location", "sourceUrl"]
+              required: ["title", "company", "location", "sourceUrl", "description"]
             }
           }
         }
@@ -92,13 +133,10 @@ export const searchJobsWithGemini = async (query: string, location: string): Pro
 
       return JSON.parse(response.text || '[]');
     } catch (error) {
-      console.error("Gemini Search Error inside retry block:", error);
-      throw error; // Rethrow to trigger retry or final catch
+      console.error("Gemini Search Error:", error);
+      throw error;
     }
-  }).catch(err => {
-    console.error("Final Gemini Search Error after retries:", err);
-    return [];
-  });
+  }).catch(() => []);
 };
 
 export interface AIInsights {
@@ -141,9 +179,6 @@ export interface CVAnalysis {
   recommendedJobIds?: string[];
 }
 
-/**
- * Deep Analysis of a CV against a specific Job or the entire database
- */
 export const analyzeCV = async (
   cvData: { text?: string; base64?: string; mimeType?: string },
   context: { jobDescription?: string; allJobs?: Job[] }
@@ -151,34 +186,19 @@ export const analyzeCV = async (
   return withRetry(async () => {
     try {
       const parts: any[] = [];
-      
       if (cvData.base64 && cvData.mimeType) {
-        parts.push({
-          inlineData: {
-            data: cvData.base64,
-            mimeType: cvData.mimeType
-          }
-        });
+        parts.push({ inlineData: { data: cvData.base64, mimeType: cvData.mimeType } });
       } else if (cvData.text) {
         parts.push({ text: `CV Content: ${cvData.text}` });
       }
 
       const jobContext = context.jobDescription 
         ? `Target Job Description: ${context.jobDescription}`
-        : `Analyze the user's profile and recommend the best career path based on these available jobs: ${JSON.stringify(context.allJobs?.map(j => ({ id: j.id, title: j.title, category: j.category, description: j.description.substring(0, 100) })))}`;
+        : `Available jobs to match with: ${JSON.stringify(context.allJobs?.map(j => ({ id: j.id, title: j.title })))}`;
 
       parts.push({ text: `
-        Act as an expert Senior Recruiter and ATS Optimization specialist in the Nigerian market. 
-        Analyze the provided CV against the context.
-        
-        Tasks:
-        1. Provide a match score (0-100).
-        2. List missing keywords or skills crucial for this specific role/market.
-        3. Give 3-5 high-impact suggestions for CV improvement.
-        4. Crucial: Provide "tailoringAdvice" - a detailed paragraph explaining exactly how to optimize the CV (e.g., "Highlight your project management experience more in the professional summary").
-        5. If other jobs in the context are a significantly better fit, list their IDs.
-        
-        Context: ${jobContext}
+        Analyze this CV for the Nigerian market. Provide matching score, tailoring advice, and missing keywords.
+        ${jobContext}
       `});
 
       const response = await ai.models.generateContent({

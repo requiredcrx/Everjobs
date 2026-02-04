@@ -18,17 +18,6 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      },
-      preview: { // Add this new 'preview' object
-        host: true,
-        port: 3000,
-        strictPort: true,
-        cors: true,
-        allowedHosts: [
-          'everjobs.onrender.com', // Add your Render domain here
-          'localhost',
-          '127.0.0.1',
-        ]
       }
     };
 });
