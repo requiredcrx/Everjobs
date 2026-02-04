@@ -4,11 +4,13 @@ import { Job } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+/**
+ * Search jobs using Gemini
+ */
 export const searchJobsWithGemini = async (query: string, location: string): Promise<Job[]> => {
   try {
     const prompt = `Search for current job openings in ${location}, Nigeria for the role: "${query}". 
-    Provide realistic job listings based on current trends.
-    Include details like title, company, location, type (Full-time, etc.), and a direct link to apply.`;
+    Provide realistic job listings based on current trends.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -25,7 +27,6 @@ export const searchJobsWithGemini = async (query: string, location: string): Pro
               company: { type: Type.STRING },
               location: { type: Type.STRING },
               type: { type: Type.STRING },
-              postedAt: { type: Type.STRING },
               description: { type: Type.STRING },
               sourceUrl: { type: Type.STRING },
               category: { type: Type.STRING },
@@ -37,16 +38,7 @@ export const searchJobsWithGemini = async (query: string, location: string): Pro
       }
     });
 
-    const textOutput = response.text;
-    if (textOutput) {
-      try {
-        return JSON.parse(textOutput);
-      } catch (parseError) {
-        console.error("Failed to parse Gemini JSON output:", parseError);
-        return [];
-      }
-    }
-    return [];
+    return JSON.parse(response.text || '[]');
   } catch (error) {
     console.error("Gemini Search Error:", error);
     return [];
@@ -63,15 +55,15 @@ export const getJobInsights = async (jobDescription: string): Promise<AIInsights
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Analyze this job description and provide structured insights: "${jobDescription}"`,
+      contents: `Analyze this job description: "${jobDescription}"`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            pros: { type: Type.ARRAY, items: { type: Type.STRING }, description: "3 compelling reasons to apply" },
-            requirements: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Top 2 critical candidate requirements" },
-            summary: { type: Type.STRING, description: "A brief 2-sentence summary of the role's impact" }
+            pros: { type: Type.ARRAY, items: { type: Type.STRING } },
+            requirements: { type: Type.ARRAY, items: { type: Type.STRING } },
+            summary: { type: Type.STRING }
           }
         }
       }
@@ -86,31 +78,77 @@ export interface CVAnalysis {
   matchScore: number;
   missingKeywords: string[];
   suggestions: string[];
+  tailoringAdvice: string;
   verdict: string;
+  recommendedJobIds?: string[];
 }
 
-export const analyzeCVForJob = async (jobDescription: string, cvText: string): Promise<CVAnalysis> => {
+/**
+ * Deep Analysis of a CV against a specific Job or the entire database
+ */
+export const analyzeCV = async (
+  cvData: { text?: string; base64?: string; mimeType?: string },
+  context: { jobDescription?: string; allJobs?: Job[] }
+): Promise<CVAnalysis> => {
   try {
+    const parts: any[] = [];
+    
+    if (cvData.base64 && cvData.mimeType) {
+      parts.push({
+        inlineData: {
+          data: cvData.base64,
+          mimeType: cvData.mimeType
+        }
+      });
+    } else if (cvData.text) {
+      parts.push({ text: `CV Content: ${cvData.text}` });
+    }
+
+    const jobContext = context.jobDescription 
+      ? `Target Job Description: ${context.jobDescription}`
+      : `Analyze the user's profile and recommend the best career path. Available jobs context: ${JSON.stringify(context.allJobs?.map(j => ({ id: j.id, title: j.title, category: j.category })))}`;
+
+    parts.push({ text: `
+      Act as a Senior Tech Recruiter in Nigeria. 
+      Analyze the attached CV against the provided context.
+      
+      Requirements:
+      1. Calculate match percentage (0-100).
+      2. Identify specific missing skills/keywords for Nigeria's market.
+      3. Provide concrete "Tailoring Advice" to optimize the CV for this specific role.
+      4. Suggest other suitable job IDs from the context if they fit better.
+      
+      ${jobContext}
+    `});
+
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Compare this CV against this Job Description.
-      CV: ${cvText}
-      Job: ${jobDescription}`,
+      contents: { parts },
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            matchScore: { type: Type.INTEGER, description: "Percentage match from 0 to 100" },
-            missingKeywords: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Keywords or skills missing from CV" },
-            suggestions: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Concrete advice to improve the CV for this specific role" },
-            verdict: { type: Type.STRING, description: "Final assessment: Highly Recommended, Good Fit, or Not Suitable" }
+            matchScore: { type: Type.INTEGER },
+            missingKeywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+            suggestions: { type: Type.ARRAY, items: { type: Type.STRING } },
+            tailoringAdvice: { type: Type.STRING, description: "Detailed guide on how to rewrite or highlight sections of the CV" },
+            verdict: { type: Type.STRING },
+            recommendedJobIds: { type: Type.ARRAY, items: { type: Type.STRING }, description: "IDs of other suitable jobs from the provided context" }
           }
         }
       }
     });
+
     return JSON.parse(response.text || '{}');
   } catch (error) {
-    return { matchScore: 0, missingKeywords: [], suggestions: ["Error during analysis."], verdict: "Unknown" };
+    console.error("Analysis Error:", error);
+    return {
+      matchScore: 0,
+      missingKeywords: [],
+      suggestions: ["We encountered an error analyzing your document. Please ensure it is a clear PDF or Text file."],
+      tailoringAdvice: "Unable to provide specific advice at this time.",
+      verdict: "Error"
+    };
   }
 };
