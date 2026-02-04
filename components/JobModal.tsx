@@ -1,9 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-// Fix: Removed CVAnalysis from '../types' import as it is defined in geminiService
 import { Job } from '../types';
-import { X, MapPin, Briefcase, DollarSign, ExternalLink, Sparkles, Loader2, FileText, CheckCircle2, AlertCircle, Upload, Lightbulb, ArrowRight } from 'lucide-react';
-// Fix: Added CVAnalysis to geminiService import
+import { X, MapPin, Briefcase, DollarSign, ExternalLink, Sparkles, Loader2, FileText, Upload, Lightbulb, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { getJobInsights, analyzeCV, AIInsights, CVAnalysis } from '../services/geminiService';
 
 interface JobModalProps {
@@ -91,14 +89,14 @@ const JobModal: React.FC<JobModalProps> = ({ job, onClose, onJobSelect }) => {
                 </div>
             </div>
             <div className="bg-slate-50 p-4 rounded-2xl">
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Salary</p>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Salary Range</p>
                 <div className="flex items-center gap-2 text-slate-700 font-bold">
                   <DollarSign size={16} className="text-indigo-500" />
                   {job.salary || 'Negotiable'}
                 </div>
             </div>
             <div className="bg-slate-50 p-4 rounded-2xl hidden sm:block">
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Type</p>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Job Type</p>
                 <div className="flex items-center gap-2 text-slate-700 font-bold">
                   <Briefcase size={16} className="text-indigo-500" />
                   {job.type}
@@ -122,15 +120,15 @@ const JobModal: React.FC<JobModalProps> = ({ job, onClose, onJobSelect }) => {
             )}
           </div>
 
-          {/* Enhanced CV Analysis Section */}
+          {/* CV Analysis Section */}
           <div className="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
               <div className="space-y-1">
                 <h3 className="text-xl font-bold flex items-center gap-2 text-indigo-400">
                   <FileText />
-                  Smart CV Match
+                  CV Compatibility Check
                 </h3>
-                <p className="text-slate-400 text-sm">Upload PDF, DOCX or TXT to check your compatibility.</p>
+                <p className="text-slate-400 text-sm">Upload PDF, DOCX or TXT to analyze matching score.</p>
               </div>
               
               <div className="flex gap-2">
@@ -153,37 +151,35 @@ const JobModal: React.FC<JobModalProps> = ({ job, onClose, onJobSelect }) => {
 
             {cvFile && !cvAnalysis && (
               <div className="bg-white/5 p-6 rounded-2xl border border-white/10 flex flex-col items-center gap-4">
-                <div className="text-indigo-400 font-bold text-sm">File: {cvFile.name}</div>
+                <div className="text-indigo-400 font-bold text-sm">Selected: {cvFile.name}</div>
                 <button 
                   onClick={handleRunAnalysis}
                   disabled={loadingAnalysis}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs py-4 rounded-xl flex items-center justify-center gap-2 transition-all"
                 >
-                  {loadingAnalysis ? <Loader2 className="animate-spin" size={20} /> : 'Run Compatibility Engine'}
+                  {loadingAnalysis ? <Loader2 className="animate-spin" size={20} /> : 'Start Analysis'}
                 </button>
               </div>
             )}
 
             {cvAnalysis && (
               <div className="space-y-8 animate-in zoom-in duration-500">
-                {/* Result Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/5 p-6 rounded-3xl border border-white/10">
-                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 rounded-full border-4 border-indigo-500 flex items-center justify-center font-black text-xl">
-                      {cvAnalysis.matchScore}%
-                    </div>
-                    <div>
-                      <div className="text-indigo-400 font-black uppercase text-[10px] tracking-widest mb-1">Verdict</div>
-                      <div className="text-xl font-black">{cvAnalysis.verdict}</div>
-                    </div>
+                {/* Score */}
+                <div className="flex items-center gap-8 bg-white/5 p-6 rounded-3xl border border-white/10">
+                  <div className="w-24 h-24 rounded-full border-4 border-indigo-500 flex items-center justify-center font-black text-2xl">
+                    {cvAnalysis.matchScore}%
+                  </div>
+                  <div>
+                    <div className="text-indigo-400 font-black uppercase text-[10px] tracking-widest mb-1">Analysis Verdict</div>
+                    <div className="text-2xl font-black">{cvAnalysis.verdict}</div>
                   </div>
                 </div>
 
-                {/* Tailoring Advice */}
-                <div className="bg-indigo-900/40 p-6 rounded-2xl border border-indigo-500/20">
-                  <h4 className="flex items-center gap-2 text-indigo-400 font-black text-xs uppercase tracking-widest mb-4">
+                {/* Strategic Tailoring Advice */}
+                <div className="bg-indigo-900/40 p-6 rounded-[24px] border border-indigo-500/20 shadow-inner">
+                  <h4 className="flex items-center gap-2 text-indigo-400 font-black text-[10px] uppercase tracking-[0.2em] mb-4">
                     <Lightbulb size={16} />
-                    How to Tailor Your CV for this Role
+                    How to Tailor Your CV
                   </h4>
                   <p className="text-sm text-slate-200 leading-relaxed font-medium">
                     {cvAnalysis.tailoringAdvice}
@@ -192,7 +188,7 @@ const JobModal: React.FC<JobModalProps> = ({ job, onClose, onJobSelect }) => {
 
                 <div className="grid sm:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Missing Keywords</h4>
+                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Target Keywords to Add</h4>
                     <div className="flex flex-wrap gap-2">
                       {cvAnalysis.missingKeywords.map(kw => (
                         <span key={kw} className="bg-red-500/10 text-red-400 text-[10px] font-black uppercase px-2 py-1 rounded-lg border border-red-500/20">{kw}</span>
@@ -200,24 +196,27 @@ const JobModal: React.FC<JobModalProps> = ({ job, onClose, onJobSelect }) => {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Optimization Steps</h4>
+                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Quick Improvement Tips</h4>
                     <ul className="space-y-2">
                       {cvAnalysis.suggestions.map((tip, i) => (
                         <li key={i} className="text-sm text-slate-300 flex gap-2">
-                          <span className="text-indigo-400 font-bold">→</span> {tip}
+                          <CheckCircle2 size={16} className="text-indigo-400 flex-shrink-0" /> {tip}
                         </li>
                       ))}
                     </ul>
                   </div>
                 </div>
 
-                {/* Other Recommendations */}
+                {/* Better Job Recommendations */}
                 {cvAnalysis.recommendedJobIds && cvAnalysis.recommendedJobIds.length > 0 && (
                   <div className="pt-6 border-t border-white/10">
-                    <h4 className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-4">Better Fits for You</h4>
-                    <div className="bg-white/5 p-4 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-white/10 transition-colors" onClick={() => onJobSelect?.(cvAnalysis.recommendedJobIds![0])}>
-                      <span className="text-sm font-bold">We found another listing that matches your skills better.</span>
-                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    <h4 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-4">Better Fits Found for You</h4>
+                    <div 
+                      onClick={() => onJobSelect?.(cvAnalysis.recommendedJobIds![0])}
+                      className="bg-emerald-500/10 p-4 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-emerald-500/20 transition-all border border-emerald-500/20"
+                    >
+                      <span className="text-sm font-bold text-emerald-400 italic">We found a role that matches your skills more closely. View recommendation?</span>
+                      <ArrowRight size={16} className="text-emerald-400 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 )}
@@ -225,24 +224,22 @@ const JobModal: React.FC<JobModalProps> = ({ job, onClose, onJobSelect }) => {
             )}
           </div>
 
-          {/* Job Details */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-slate-900">Full Description</h3>
+            <h3 className="text-lg font-bold text-slate-900">Job Description</h3>
             <p className="text-slate-600 leading-relaxed text-sm whitespace-pre-line">
               {job.description}
             </p>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-4">
+        <div className="p-6 border-t border-slate-100 bg-slate-50">
           <a 
             href={job.sourceUrl} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-200"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-200"
           >
-            Apply Now
+            Apply Directly
             <ExternalLink size={18} />
           </a>
         </div>
